@@ -1,0 +1,53 @@
+name: Blog Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查分支
+        uses: actions/checkout@main
+
+      - name: 安装 Node
+        uses: actions/setup-node@main
+        with:
+          node-version: "18.x"
+
+      - name: 安装 Hexo
+        run: |
+          export TZ='Asia/Shanghai'
+          npm install hexo-cli -g
+
+      - name: 安装依赖
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          npm install --save
+
+      - name: 生成静态文件
+        run: |
+          hexo clean
+          hexo generate
+#          hexo deploy
+
+      - name: Deploy to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v3
+        with:
+#          committer: Lay523
+#          author: LayV523@gmail.com
+          target_branch: gh-pages
+          build_dir: public
+          fqdn:
+          keep_history: true
+        env:
+          # @see https://docs.github.com/cn/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
